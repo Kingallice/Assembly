@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/buildAssembly.py -cwd=${cwd} -b=${fileBasenameNoExtension} -r=${relativeFile}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Build Assembly",
+            "program": "${workspaceFolder}/buildASM.py -w=${workspaceFolder} -b=${fileBasenameNoExtension} -r=${relativeFile}",
+            "console": "integratedTerminal",
+            "request": "launch",
+            "type": "python"
+        }
+    ]
+}
