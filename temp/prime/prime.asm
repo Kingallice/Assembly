@@ -1,14 +1,12 @@
 %include "asm_io.inc"
 segment .data
-space db " ", 0
 np db " is not a prime number.", 0
 pr db " is a prime number. ", 0
-input_string db "Please insert a number. ", 0
+input_string db "Enter a number to check for primality: ", 0
  
 segment .bss
-
-N      resW 1
 input  resd 1
+index   resd 1
 
 segment .text
         global  asm_main
@@ -20,35 +18,34 @@ asm_main:
         call print_string
         call read_int
         mov [input], eax
-
-        mov ecx, eax
-
-L1:
-        mov bx, 2
-        cmp ax, bx
+        cmp eax, 1
+        JE Not_Prime
+        cmp eax, 2
         JE Prime
-        mov dx, 0
-        div bx
-        cmp dx, 0
+        mov ebx, 2
+        mov edx, 0
+        idiv ebx
+        cmp edx, 0
         JE Not_Prime
-        mov bx, 1
-        JMP iter
-        
+        add ebx, 1
+        mov [index], ebx
 iter:
-        mov ax, [input]
-        add bx, 2
-        mov cx, [input]
-        shr cx, 1
-        cmp bx, cx
+        mov eax, [input]
+        mov ebx, 2
+        mov edx, 0
+        idiv ebx
+        mov ecx, [index]
+        cmp ecx, eax
         JG Prime
-        mov dx, 0
-        div bx
-        cmp dx, 0
+        mov eax, [input]
+        mov ebx, [index]
+        mov edx, 0
+        idiv ebx
+        cmp edx, 0
         JE Not_Prime
-        mov ax, bx
-        call print_int
-        mov ax, space
-        call print_string
+        mov ebx, [index]
+        add ebx, 2
+        mov [index], ebx
         JMP iter
 
 Not_Prime:
@@ -56,12 +53,12 @@ Not_Prime:
         call print_int
         mov eax, np
         call print_string
+        call print_nl
         jmp end
 
 Prime:
         mov eax, 0
         mov eax, [input]
-        call print_nl
         call print_int
         mov eax, pr
         call print_string
