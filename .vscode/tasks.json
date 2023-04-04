@@ -7,7 +7,7 @@
             "label": "build",
             "problemMatcher": ["$tsc"],
             "type": "shell",
-            "command": "python3 buildASM.py -w=${workspaceFolder} -cwd=${cwd} -b=${fileBasenameNoExtension} -r=${relativeFile}"
+            "command": "python3 buildASM.py -w='${workspaceFolder}' -cwd='${cwd}' -b='${fileBasenameNoExtension}' -r='${relativeFile}'"
         },
         {
             "label": "nasm",

@@ -8,9 +8,9 @@ argParser.add_argument("-r", "--rel", help="Relative File")
 argParser.add_argument("-b","--basename", help="Basename of file")
 args = argParser.parse_args()
 
-dir = "./temp"
+dir = "./Projects/"
 
-inputfile=args.basename+".asm"
+inputfile=args.rel
 
 #Ensures temp directory exists
 if os.path.isdir(dir) == False:
@@ -25,17 +25,35 @@ def cleanDir(dir_path):
 fileOpen = open(inputfile, "r")
 data = fileOpen.read()
 fileOpen.close()
-data = data.replace("linux-ex/","")
+
+includeString = "%include \""
+data1 = data.replace(includeString, includeString+"../"*(len(args.rel.split("/"))-1)+"linux-ex/")
+
+arrIncludes = []
+location = 0
+while data.find(includeString, location) != -1:
+    location = data.find(includeString, location) + len(includeString)
+    end = data.find("\"", location)
+    arrIncludes.append(data[location:end])
+    location = end
 
 #creates/cleans directory for files
 cleanDir(dir+"/"+args.basename)
 
-fileOpen = open(dir+"/"+args.basename+"/"+inputfile,"w")
+fileOpen = open(dir+"/"+args.basename+"/"+"DEP"+args.basename+".asm","w")
+fileOpen.write(data1)
+fileOpen.close()
+fileOpen = open(dir+"/"+args.basename+"/"+args.basename+".asm","w")
 fileOpen.write(data)
 fileOpen.close()
 
-nasm="nasm -f elf {relativeFile} -o temp/{fileBasename}/{fileBasename}.o".format(relativeFile=args.rel,fileBasename=args.basename)
-gcc="gcc -m32 -o temp/{fileBasename}/{fileBasename} temp/{fileBasename}/{fileBasename}.o {workspace}/linux-ex/driver.c {workspace}/linux-ex/asm_io.o".format(workspace=args.workspace,fileBasename=args.basename)
-print(nasm, "\n", gcc)
+includes = ""
+for inc in arrIncludes:
+    includes += "'{workspace}/linux-ex/".format(workspace=args.workspace) + "".join(inc.split(".")[0:-1]) + ".o' "
+
+nasm="nasm -f elf '{dir}{fileBasename}/DEP{fileBasename}.asm' -o '{dir}{fileBasename}/{fileBasename}.o'".format(dir=dir, relativeFile=args.rel,fileBasename=args.basename)
+gcc="gcc -m32 -o '{dir}{fileBasename}/{fileBasename}' '{dir}{fileBasename}/{fileBasename}.o' '{workspace}/linux-ex/driver.c' {includes}".format(dir=dir, workspace=args.workspace,fileBasename=args.basename, includes=includes)
+#print(nasm, "\n", gcc)
 os.system(nasm)
 os.system(gcc)
+os.remove(dir+"/"+args.basename+"/"+"DEP"+args.basename+".asm")

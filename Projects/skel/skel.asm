@@ -1,4 +1,4 @@
-%include "linux-ex/asm_io.inc"
+%include "asm_io.inc"
 segment .data
 ;
 ; initialized data is put in the data segment here
