@@ -1,12 +1,13 @@
 %include "linux-ex/asm_io.inc"
-segment .data
-space db " ", 0
-input_string db "Please insert a number: ", 0
- 
-segment .bss
 
-N      resW 1
-input  resd 1
+segment .data
+input_string db "Find all divisors of ", 0
+output_string db "The divisors are ", 0
+space db " ", 0
+
+segment .bss
+input resd 1
+index resd 1
 
 segment .text
         global  asm_main
@@ -18,55 +19,34 @@ asm_main:
         call print_string
         call read_int
         mov [input], eax
-
-        mov ecx, eax
-
-L1:
-        mov bx, 2
-        cmp ax, bx
-        JE Prime
-        mov dx, 0
-        div bx
-        cmp dx, 0
-        JE Not_Prime
-        mov bx, 1
-        JMP iter
-        
-iter:
-        mov ax, [input]
-        add bx, 2
-        mov cx, [input]
-        shr cx, 1
-        cmp bx, cx
-        JG Prime
-        mov dx, 0
-        div bx
-        cmp dx, 0
-        JE Not_Prime
-        mov ax, bx
-        call print_int
-        mov ax, space
-        call print_string
-        JMP iter
-
-Not_Prime:
-        mov eax, [input]
-        call print_int
-        mov eax, np
-        call print_string
-        jmp end
-
-Prime:
         mov eax, 0
-        mov eax, [input]
-        call print_nl
-        call print_int
-        mov eax, pr
+        mov [index], eax
+        mov eax, output_string
         call print_string
-        call print_nl
-        jmp end
+
+iter:   
+        mov eax, [index]
+        add eax, 1
+        mov [index], eax
+        mov eax, [input]
+        mov ecx, [index]
+        cmp eax, ecx
+        JB end
+        mov edx, 0
+        idiv ecx
+        cmp edx, 0
+        JE print
+        JMP iter
+
+print:
+        mov eax, [index]
+        call print_int
+        mov eax, space
+        call print_string
+        JMP iter
 
 end:
+        call print_nl
         popa
         mov     eax, 0            ; return back to C
         leave                     
