@@ -27,7 +27,9 @@ data = fileOpen.read()
 fileOpen.close()
 
 includeString = "%include \""
-data1 = data.replace(includeString, includeString+"../"*(len(args.rel.split("/"))-1)+"linux-ex/")
+data1 = data.replace(includeString, includeString+"linux-ex/")
+
+print()
 
 arrIncludes = []
 location = 0
@@ -57,3 +59,4 @@ gcc="gcc -m32 -o '{dir}{fileBasename}/{fileBasename}' '{dir}{fileBasename}/{file
 os.system(nasm)
 os.system(gcc)
 os.remove(dir+"/"+args.basename+"/"+"DEP"+args.basename+".asm")
+os.system("{dir}{fileBasename}/{fileBasename}".format(dir=dir,fileBasename=args.basename))
