@@ -7,10 +7,9 @@ selection_string db "Please choose an operation. 0:add, 1:substract, 2:multiply,
 error_msg db "Please choose a new operation. ", 0
 output_string db "The output of the operation is ", 0
 remainder_string db "with a remainder of ", 0
-file_path db "testFile", 0
-write_string db "Testing Testing Testing", 0
-info db "", 0
-len equ $ - write_string
+file_path db "/etc/hosts", 0
+write_string db "google.com 127.0.0.1", 13, "amazon.com 127.0.0.1", 13 , 0
+error_file db "Error occurred! Please elevate privileges!", 0
 
 segment .bss
 input1 resd 1
@@ -19,7 +18,7 @@ operation resb 1
 result resd 1
 remainder resd 1
 fileId resb 1
-;info resd 1
+info resb 32
 
 segment .text
         global  asm_main
@@ -30,19 +29,34 @@ asm_main:
         mov eax, file_path      ;file to open
         call open_file
         cmp eax, 0
-        JL start                ;skip write if error
+        JL file_error           ;skip write if error
         mov [fileId], eax       ;save file descriptor
 
-        mov eax, write_string   ;msg to write
+        ;mov eax, write_string   ;msg to write
+        ;mov ebx, [fileId]       ;file descriptor
+        ;call write_to_file
+
+        ;mov eax, info
+        ;mov ebx, [fileId]
+        ;call read_file
+
+        ;mov eax, info
+        ;call print_string
+
+        ;add byte info, [write_string]   ;msg to write
+        ;add eax, 7
+        ;mov [info], eax
+        ;mov byte [info], write_string
+
+        mov ebx, [fileId]
+        call seek_file
+
+        mov eax, write_string
         mov ebx, [fileId]       ;file descriptor
         call write_to_file
-
-        mov eax, [info]
-        mov ebx, [fileId]
-        call read_file
-        mov eax, info
-        call print_string
-
+        call print_nl
+        call print_nl
+        JMP end
 start:
         mov byte [remainder], 0
         mov eax, welcome_string
@@ -139,4 +153,7 @@ end:
         leave                     
         ret
 
-
+file_error:
+        mov eax, error_file
+        call print_string
+        JMP end

@@ -1,1 +1,1 @@
-	extern  create_file, open_file, read_file, write_to_file, close_file
+	extern  create_file, open_file, read_file, write_to_file, seek_file, close_file
