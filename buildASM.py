@@ -1,5 +1,6 @@
 import os
 import argparse
+import subprocess
 
 argParser = argparse.ArgumentParser()
 argParser.add_argument("-w", "--workspace", help="Workspace of vscode")
@@ -50,13 +51,37 @@ fileOpen.write(data)
 fileOpen.close()
 
 includes = ""
-for inc in arrIncludes:
-    includes += "'{workspace}/linux-ex/".format(workspace=args.workspace) + "".join(inc.split(".")[0:-1]) + ".o' "
 
-nasm="nasm -f elf '{dir}{fileBasename}/DEP{fileBasename}.asm' -o '{dir}{fileBasename}/{fileBasename}.o'".format(dir=dir, relativeFile=args.rel,fileBasename=args.basename)
-gcc="gcc -m32 -o '{dir}{fileBasename}/{fileBasename}' '{dir}{fileBasename}/{fileBasename}.o' '{workspace}/linux-ex/driver.c' {includes}".format(dir=dir, workspace=args.workspace,fileBasename=args.basename, includes=includes)
+type = ""
+space = ""
+if data.split("\n")[0].lower() == ";windows":
+    type="win32"
+    space = "_"
+for inc in arrIncludes:
+    includes += "'{workspace}/linux-ex/".format(workspace=args.workspace) + "".join(inc.split(".")[0:-1]) + space + type + ".o' "
+
+if type == "":
+    type = "elf"
+assemble=""
+if(subprocess.check_call("nasm -v > /dev/null",shell=True) == 0):
+    assemble="nasm -f '{type}' '{dir}{fileBasename}/DEP{fileBasename}.asm' -o '{dir}{fileBasename}/{fileBasename}.o'".format(type=type, dir=dir, relativeFile=args.rel,fileBasename=args.basename)
+else:
+    print("No Assembler Installed")
+    exit()
+
+if type=="win32":
+    type=".exe"
+else:
+    type=""
+
+compile = ""
+if(subprocess.check_call("gcc --version > /dev/null",shell=True) == 0):
+    compile="gcc -m32 -o '{dir}{fileBasename}/{fileBasename}{type}' '{dir}{fileBasename}/{fileBasename}.o' '{workspace}/linux-ex/driver.c' {includes}".format(type=type, dir=dir, workspace=args.workspace,fileBasename=args.basename, includes=includes)
+else:
+    print("No Compiler Installed")
+    exit()
 #print(nasm, "\n", gcc)
-os.system(nasm)
-os.system(gcc)
+os.system(assemble)
+os.system(compile)
 os.remove(dir+"/"+args.basename+"/"+"DEP"+args.basename+".asm")
 os.system("{dir}{fileBasename}/{fileBasename}".format(dir=dir,fileBasename=args.basename))
