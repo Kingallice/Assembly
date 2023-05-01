@@ -23,14 +23,14 @@ open_file:
         mov eax, 5      ;sys_open()
         mov ecx, 2
         mov edx, 0777
-        int 21h
+        int 0x80
         ret
 
 read_file:
         mov ecx, eax    ;store location
         mov eax, 3      ;sys_read()
         mov edx, 0FFFFFFFFh     ;bytes to read
-        int 21h
+        int 0x80
         ret
 
 write_to_file:

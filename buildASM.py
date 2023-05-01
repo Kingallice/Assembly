@@ -1,6 +1,22 @@
 import os
 import argparse
 import subprocess
+import platform
+
+systemOS = platform.system()
+type = ""
+outExt = ""
+defineType = ""
+if systemOS == "Linux":
+    type = "elf"
+    outExt = ".o"
+    defineType = "ELF_TYPE"
+elif systemOS == "Windows":
+    type = "win32"
+    outExt = ".obj"
+    defineType = "COFF_TYPE"
+else:
+    print(systemOS)
 
 argParser = argparse.ArgumentParser()
 argParser.add_argument("-w", "--workspace", help="Workspace of vscode")
@@ -9,9 +25,14 @@ argParser.add_argument("-r", "--rel", help="Relative File")
 argParser.add_argument("-b","--basename", help="Basename of file")
 args = argParser.parse_args()
 
-dir = "./Projects/"
+if(args.rel.split(".")[-1]!="asm"):
+    print("An assembly file was not passed!")
+    exit()
+
+dir = os.path.realpath("./Projects/")
 
 inputfile=args.rel
+
 
 #Ensures temp directory exists
 if os.path.isdir(dir) == False:
@@ -30,7 +51,8 @@ fileOpen.close()
 includeString = "%include \""
 data1 = data.replace(includeString, includeString+"linux-ex/")
 
-print()
+if systemOS == "Windows":
+    data1 = data1.replace("asm_main", "_asm_main")
 
 arrIncludes = []
 location = 0
@@ -43,6 +65,7 @@ while data.find(includeString, location) != -1:
 #creates/cleans directory for files
 cleanDir(dir+"/"+args.basename)
 
+
 fileOpen = open(dir+"/"+args.basename+"/"+"DEP"+args.basename+".asm","w")
 fileOpen.write(data1)
 fileOpen.close()
@@ -50,38 +73,61 @@ fileOpen = open(dir+"/"+args.basename+"/"+args.basename+".asm","w")
 fileOpen.write(data)
 fileOpen.close()
 
+
 includes = ""
-
-type = ""
-space = ""
-if data.split("\n")[0].lower() == ";windows":
-    type="win32"
-    space = "_"
 for inc in arrIncludes:
-    includes += "'{workspace}/linux-ex/".format(workspace=args.workspace) + "".join(inc.split(".")[0:-1]) + space + type + ".o' "
+    includes += "\""+os.path.join(args.workspace, "linux-ex", "".join(inc.split(".")[0:-1]) + outExt + "\" ")
 
-if type == "":
-    type = "elf"
+print(includes)
+
 assemble=""
-if(subprocess.check_call("nasm -v > /dev/null",shell=True) == 0):
-    assemble="nasm -f '{type}' '{dir}{fileBasename}/DEP{fileBasename}.asm' -o '{dir}{fileBasename}/{fileBasename}.o'".format(type=type, dir=dir, relativeFile=args.rel,fileBasename=args.basename)
+if(subprocess.getstatusoutput("nasm -v")[0] == 0):
+    print(" Preparing Linked Files\n------------------------")
+    for inc in arrIncludes:
+        inc = os.path.join(args.workspace, "linux-ex","".join(inc.split(".")[0:-1]))
+        if not os.path.exists(inc):
+            check = subprocess.getstatusoutput("nasm -f {type} -d {define} {asm}\"".format(type=type, define=defineType, asm=inc+".asm", out=inc+outExt))
+            if(check[0] == 1):
+                print("Error:\n"+check[1])
+                exit()
+
+    fileASM = os.path.realpath('{dir}/{fileBasename}/DEP{fileBasename}.asm'.format(dir=dir, relativeFile=args.rel,fileBasename=args.basename))
+    fileO = os.path.realpath('{dir}/{fileBasename}/{fileBasename}{outExt}'.format(dir=dir, relativeFile=args.rel,fileBasename=args.basename, outExt=outExt))
+    assemble="nasm -f {type} -d {define} {asm} -o {out}".format(type=type, define=defineType, asm=fileASM, out=fileO)
 else:
     print("No Assembler Installed")
     exit()
 
-if type=="win32":
+if systemOS=="Linux":
+    type=""
+elif systemOS=="Windows":
     type=".exe"
 else:
     type=""
 
 compile = ""
-if(subprocess.check_call("gcc --version > /dev/null",shell=True) == 0):
-    compile="gcc -m32 -o '{dir}{fileBasename}/{fileBasename}{type}' '{dir}{fileBasename}/{fileBasename}.o' '{workspace}/linux-ex/driver.c' {includes}".format(type=type, dir=dir, workspace=args.workspace,fileBasename=args.basename, includes=includes)
+if(subprocess.getstatusoutput("gcc --version")[0] == 0):
+    fileExe = os.path.realpath('{dir}/{fileBasename}/{fileBasename}{type}'.format(dir=dir, fileBasename=args.basename, type=type))
+    fileO = os.path.realpath('{dir}/{fileBasename}/{fileBasename}{outExt}'.format(dir=dir, fileBasename=args.basename, outExt=outExt))
+    driver = os.path.realpath('{workspace}/linux-ex/driver.c'.format(workspace=args.workspace))
+    compile="gcc -m32 -o \"{fileExe}\" \"{fileO}\" \"{driver}\" {includes}".format(type=type, dir=dir, fileExe=fileExe, fileO=fileO, driver=driver, includes=includes)
 else:
     print("No Compiler Installed")
     exit()
-#print(nasm, "\n", gcc)
-os.system(assemble)
-os.system(compile)
-os.remove(dir+"/"+args.basename+"/"+"DEP"+args.basename+".asm")
-os.system("{dir}{fileBasename}/{fileBasename}".format(dir=dir,fileBasename=args.basename))
+#print(assemble, "\n", compile)
+print("\n Assembling Assembly File\n--------------------------")
+check = subprocess.getstatusoutput(assemble)
+os.remove(dir+"/"+args.basename+"/"+"DEP"+args.basename+".asm") #Remove Dependency File
+if(check[0] == 1):
+    print("Error:\n"+check[1])
+    exit()
+
+print("\n Compiling and Linking Files\n-----------------------------")
+check = subprocess.getstatusoutput(compile)
+if(check[0] == 1):
+    print("Error:\n"+check[1])
+    exit()
+
+print("\n Running Program\n-----------------")
+exe = os.path.abspath('{dir}/{fileBasename}/{fileBasename}{type}'.format(dir=dir,fileBasename=args.basename, type=type))
+check = os.system(exe)
