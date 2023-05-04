@@ -1,5 +1,5 @@
-%include "asm_io.inc"
-%include "file_io.inc"
+%include "linux-ex/asm_io.inc"
+%include "linux-ex/file_io.inc"
 segment .data
 welcome_string db "Welcome to the calculator of PAIN", 0
 input_string db "Please insert a number. ", 0
@@ -21,8 +21,8 @@ fileId resb 1
 info resb 32
 
 segment .text
-        global  asm_main, randgen
-asm_main:
+        global  _asm_main, randgen
+_asm_main:
         enter   0,0               ; setup routine
         pusha
 
