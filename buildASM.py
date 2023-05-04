@@ -85,9 +85,9 @@ if(subprocess.getstatusoutput("nasm -v")[0] == 0):
     print(" Preparing Linked Files\n------------------------")
     for inc in arrIncludes:
         inc = os.path.join(args.workspace, "linux-ex","".join(inc.split(".")[0:-1]))
-        if not os.path.exists(inc):
-            check = subprocess.getstatusoutput("nasm -f {type} -d {define} {asm}\"".format(type=type, define=defineType, asm=inc+".asm", out=inc+outExt))
-            if(check[0] == 1):
+        if not os.path.exists(inc+outExt):
+            check = subprocess.getstatusoutput("nasm -f {type} -d {define} {asm} -o \"{out}\"".format(type=type, define=defineType, asm=inc+".asm", out=inc+outExt))
+            if(check[0] != 0):
                 print("Error:\n"+check[1])
                 exit()
 
