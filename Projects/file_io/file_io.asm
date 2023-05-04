@@ -7,7 +7,11 @@ segment .bss
 ;
 ; uninitialized data is put in the bss segment
 ;
-
+%ifdef ELF_TYPE
+ osCall db 0x80
+%else
+ osCall db 21h
+%endif
 segment .text
         global  create_file, open_file, read_file, write_to_file, seek_file, close_file
 
@@ -23,14 +27,14 @@ open_file:
         mov eax, 5      ;sys_open()
         mov ecx, 2
         mov edx, 0777
-        int 21h
+        int 0x80
         ret
 
 read_file:
         mov ecx, eax    ;store location
         mov eax, 3      ;sys_read()
         mov edx, 0FFFFFFFFh     ;bytes to read
-        int 21h
+        int 0x80
         ret
 
 write_to_file:
