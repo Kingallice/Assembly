@@ -7,11 +7,6 @@ segment .bss
 ;
 ; uninitialized data is put in the bss segment
 ;
-%ifdef ELF_TYPE
- osCall db 0x80
-%else
- osCall db 21h
-%endif
 segment .text
         global  create_file, open_file, read_file, write_to_file, seek_file, close_file
 
