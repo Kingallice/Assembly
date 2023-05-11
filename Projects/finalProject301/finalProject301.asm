@@ -39,7 +39,7 @@ fileId resb 1
 info resb 32
 
 segment .text
-        global  asm_main
+        global  asm_main, randgen
 asm_main:
         enter   0,0               ; setup routine
         pusha
